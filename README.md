@@ -1,3 +1,3 @@
 # NetMan
 
-A description of this package.
+A basic network manager.
