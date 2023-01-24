@@ -1,6 +1,12 @@
 import Foundation
 //import os
 
+
+public protocol NetworkSession {
+    func dataTask(with request: URLRequest, completionHandler: @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+}
+extension URLSession: NetworkSession {}
+
 public protocol NetworkManaging {
     func perform<ResultType: Decodable>(
         _ request: URLRequest,
@@ -10,10 +16,10 @@ public protocol NetworkManaging {
 }
 
 public struct NetworkManager {
-    public let session: URLSession
+    public let session: NetworkSession
 //    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "network")
 
-    public init(session: URLSession = URLSession.shared) {
+    public init(session: NetworkSession = URLSession.shared) {
         self.session = session
     }
     
