@@ -2,42 +2,45 @@ import Foundation
 //import os
 
 public protocol NetworkManaging {
-    associatedtype ResultType : Decodable
-    func run(
+    func perform<ResultType: Decodable>(
         _ request: URLRequest,
         keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy,
-        completion: @escaping ((Result<ResultType, Error>) -> Void)
+        completion: @escaping ((Result<ResultType, NetworkError>) -> Void)
     )
 }
 
-public struct NetMan<ResultType: Decodable> {
-
+public struct NetworkManager {
     public let session: URLSession
-
 //    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "network")
 
     public init(session: URLSession = URLSession.shared) {
         self.session = session
     }
     
-    public func run(
+    public func perform<ResultType: Decodable>(
         _ request: URLRequest,
-        keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys,
-        completion: @escaping ((Result<ResultType, Error>) -> Void)
+        keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy,
+        completion: @escaping ((Result<ResultType, NetworkError>) -> Void)
     ) {
 
         let dataTask = session.dataTask(with: request) { data, response, error in
             if let error = error {
-                completion(Result.failure(error))
+                let networkError = mapToNetworkError(response: response, error: error)
+                completion(.failure(networkError))
                 return
             }
 
             if let data = data {
-                completion(self.decodeData(data, keyDecodingStrategy: keyDecodingStrategy))
+                do {
+                    let decodedData: ResultType = try decodeData(data, keyDecodingStrategy: keyDecodingStrategy)
+                    completion(.success(decodedData))
+                } catch {
+                    completion(.failure(.decodeError))
+                }
                 return
             }
 
-            completion(.failure(NetError.undefinedError(response)))
+            completion(.failure(.noContent(response)))
         }
 //        if #available(macOS 12.0, *) {
 //            dataTask.delegate = LoadTracker()
@@ -46,21 +49,27 @@ public struct NetMan<ResultType: Decodable> {
         dataTask.resume()
     }
 
-    private func decodeData(
+    private func decodeData<ResultType: Decodable>(
         _ data: Data,
         keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy
-    ) -> Result<ResultType, Error> {
-
+    ) throws -> ResultType {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = keyDecodingStrategy
+        return try decoder.decode(ResultType.self, from: data)
+    }
+    
+    private func mapToNetworkError(response: URLResponse?, error: Error) -> NetworkError {
+        guard let statusCode = (response as? HTTPURLResponse)?.statusCode else {
+            return .undefined(error)
+        }
 
-        do {
-            let decodedResult = try decoder.decode(ResultType.self, from: data)
-            return Result.success(decodedResult)
-        } catch {
-//            logger.log(error)
-            debugPrint(error)
-            return Result.failure(NetError.decodeError(error))
+        switch statusCode {
+        case 400..<500:
+            return .badRequest
+        case 500..<600:
+            return .serverError
+        default:
+            return .undefined(error)
         }
     }
 }
