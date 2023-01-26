@@ -28,7 +28,7 @@ struct ContentView: View {
                     .imageScale(.large)
                 
                 Button("Next") {
-                    viewModel.requestNextCatFact()
+                    viewModel.requestNextCatFact1()
                 }
                 .padding(24)
             }
