@@ -1,3 +1,3 @@
 # NetMan
 
-A basic network manager.
+A network manager to perform API calls.
