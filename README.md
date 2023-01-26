@@ -20,7 +20,8 @@ A basic network manager to perform API calls.
     }
     
 Using async await:
-        let request = URLRequest(url: URL(string: "https://catfact.ninja/fact")!)
+
+    let request = URLRequest(url: URL(string: "https://catfact.ninja/fact")!)
 
     Task {
         do {
