@@ -1,7 +1,7 @@
 import Foundation
 
-public enum NetworkError : Error {
-    case decodeError
+public enum NetworkError: Error {
+    case decodeError(Error)
     case noContent(URLResponse?)
     case badRequest
     case serverError
