@@ -8,7 +8,7 @@ A basic network manager to perform API calls.
 
     let request = URLRequest(url: URL(string: "https://catfact.ninja/fact")!)
 
-    NetworkManager().perform(request, keyDecodingStrategy: .useDefaultKeys) { (result: Result<CatFact, NetworkError>) -> Void in
+    NetworkManager().perform(request, jsonDecoder: .init()) { (result: Result<CatFact, NetworkError>) -> Void in
         DispatchQueue.main.async {
             switch result {
             case .success(let catFact):
@@ -25,7 +25,7 @@ Using async await:
 
     Task {
         do {
-            let result: CatFact = try await NetworkManager().perform(request, keyDecodingStrategy: .useDefaultKeys)
+            let result: CatFact = try await NetworkManager().perform(request, jsonDecoder: .init())
             DispatchQueue.main.async {
                 // Present cat fact
             }
